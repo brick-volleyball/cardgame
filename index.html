@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- BRICK CARD HERO v0.4.0 (2026-09-24) : single-file / GitHub Pages対応 -->
+<!-- BRICK CARD HERO v0.7.0 (2026-09-24) : single-file / GitHub Pages対応 -->
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#182338"><meta name="apple-mobile-web-app-capable" content="yes">
-<title>BRICK CARD HERO v0.4.0</title>
+<title>BRICK CARD HERO v0.7.0</title>
 <style>:root{
   --navy:#182338; --navy2:#22314d; --navy3:#2d4063; --tq:#4FC3D9; --or:#E8703A; --ink:#eef3f8; --mute:#9fb0c8;
   --card:#f7f4ec; --zf:#ffd9c2; --zfk:#E8703A; --zb:#c9eef7; --zbk:#1c9bb5; --zm:#e4dcfb; --zmk:#7a5cd6; --cardink:#182338; --good:#3fd18a; --bad:#ff5d6c; --gold:#ffd34d;
@@ -274,12 +274,14 @@ var BCH = (function () {
   };
 
   // 技: n=名前, c=ボール, p=パワー, r=範囲, f=使える位置(front/back/any)
-  // r: straight(正面の最初の相手) jump(ひとつとび) pierce(列貫通) any(ねらい撃ち) all(相手全員)
+  // r: adj(隣接) straight(まっすぐ) hstraight(へるまっすぐ) pierce(かんつう) jump(1つとび) jump2(2つとび) jump12(1つ&2つとび)
+  //    any(どこでも：相手選手) line(いっちょくせん：相手全員か味方全員)
   //    heal(味方回復) kiai(味方1人を集中) kiaiAll(味方全員集中) ball(ボール獲得)
   function A(n, c, p, r, f) { return { n: n, c: c, p: p, r: r, f: f || 'any' }; }
 
   var RANGE_LABEL = {
-    straight: '正面', jump: 'ひとつとび', pierce: '貫通', any: 'ねらい撃ち', all: '全体',
+    adj: '隣接', straight: 'まっすぐ', hstraight: 'へるまっすぐ', pierce: 'かんつう', jump: '1つとび', jump2: '2つとび', jump12: '1つ&2つとび',
+    any: 'どこでも', line: 'いっちょくせん',
     heal: '回復', kiai: '集中付与', kiaiAll: '全員集中', ball: 'ボール獲得'
   };
   var FROM_LABEL = { front: '前衛から', back: '後衛から', any: 'どこでも' };
@@ -287,13 +289,13 @@ var BCH = (function () {
   var CARDS = {
     // ---- 選手カード ----
     ace: { type: 'mon', r: 1, member: 'm1', title: 'エーススパイカー', pos: 'OH', lv: [
-      { hp: 3, atk: [A('スパイク', 0, 2, 'straight', 'front')] },
-      { hp: 4, atk: [A('スパイク', 0, 3, 'straight', 'front')] },
-      { hp: 5, atk: [A('スパイク', 0, 3, 'straight', 'front'), A('強打', 2, 3, 'pierce', 'front')] }] },
+      { hp: 3, atk: [A('スパイク', 0, 2, 'adj', 'front')] },
+      { hp: 4, atk: [A('スパイク', 0, 3, 'adj', 'front')] },
+      { hp: 5, atk: [A('スパイク', 0, 3, 'adj', 'front'), A('強打', 2, 3, 'pierce', 'front')] }] },
     middle: { type: 'mon', r: 1, member: 'm2', title: '壁ブロッカー', pos: 'MB', lv: [
-      { hp: 4, atk: [A('クイック', 0, 1, 'straight', 'front')] },
-      { hp: 5, atk: [A('クイック', 0, 2, 'straight', 'front')], block: 1 },
-      { hp: 6, atk: [A('クイック', 0, 2, 'straight', 'front'), A('速攻', 1, 3, 'straight', 'front')], block: 1 }] },
+      { hp: 4, atk: [A('クイック', 0, 1, 'adj', 'front')] },
+      { hp: 5, atk: [A('クイック', 0, 2, 'adj', 'front')], block: 1 },
+      { hp: 6, atk: [A('クイック', 0, 2, 'adj', 'front'), A('速攻', 1, 3, 'straight', 'front')], block: 1 }] },
     setter: { type: 'mon', r: 1, member: 'm3', title: '司令塔セッター', pos: 'S', lv: [
       { hp: 3, atk: [A('トス', 0, 0, 'kiai', 'any')] },
       { hp: 3, atk: [A('トス', 0, 0, 'kiai', 'any'), A('ツーアタック', 1, 2, 'any', 'front')] },
@@ -305,19 +307,19 @@ var BCH = (function () {
     server: { type: 'mon', r: 1, member: 'm6', title: 'ジャンプサーバー', pos: 'SV', lv: [
       { hp: 2, atk: [A('サーブ', 0, 1, 'jump', 'back')] },
       { hp: 3, atk: [A('サーブ', 0, 2, 'jump', 'back')] },
-      { hp: 3, atk: [A('サーブ', 0, 2, 'jump', 'back'), A('ジャンプサーブ', 2, 3, 'jump', 'back')] }] },
+      { hp: 3, atk: [A('サーブ', 0, 2, 'jump', 'back'), A('ジャンプサーブ', 2, 3, 'jump12', 'back')] }] },
     rookie: { type: 'mon', r: 1, member: 'm7', title: '期待のルーキー', pos: 'OH', lv: [
-      { hp: 2, atk: [A('スパイク', 0, 2, 'straight', 'front')] },
-      { hp: 3, atk: [A('スパイク', 0, 3, 'straight', 'front')] },
-      { hp: 4, atk: [A('スパイク', 0, 4, 'straight', 'front')] }] },
+      { hp: 2, atk: [A('スパイク', 0, 2, 'adj', 'front')] },
+      { hp: 3, atk: [A('スパイク', 0, 3, 'adj', 'front')] },
+      { hp: 4, atk: [A('スパイク', 0, 4, 'adj', 'front')] }] },
     veteran: { type: 'mon', r: 1, member: 'm8', title: 'いぶし銀ベテラン', pos: 'MB', lv: [
-      { hp: 4, atk: [A('プッシュ', 0, 1, 'straight', 'front')] },
-      { hp: 5, atk: [A('プッシュ', 0, 2, 'straight', 'front')] },
-      { hp: 6, atk: [A('プッシュ', 0, 3, 'straight', 'front'), A('指示出し', 0, 1, 'ball', 'any')] }] },
+      { hp: 4, atk: [A('プッシュ', 0, 1, 'adj', 'front')] },
+      { hp: 5, atk: [A('プッシュ', 0, 2, 'adj', 'front')] },
+      { hp: 6, atk: [A('プッシュ', 0, 3, 'hstraight', 'front'), A('指示出し', 0, 1, 'ball', 'any')] }] },
     opposite: { type: 'mon', r: 2, member: 'm5', title: '大砲オポジット', pos: 'OP', lv: [
-      { hp: 3, atk: [A('バックアタック', 1, 2, 'straight', 'any')] },
-      { hp: 4, atk: [A('バックアタック', 1, 3, 'straight', 'any')] },
-      { hp: 4, atk: [A('バックアタック', 1, 3, 'straight', 'any'), A('ハイセット', 2, 3, 'pierce', 'any')] }] },
+      { hp: 3, atk: [A('バックアタック', 1, 2, 'jump', 'back')] },
+      { hp: 4, atk: [A('バックアタック', 1, 3, 'jump', 'back')] },
+      { hp: 4, atk: [A('バックアタック', 1, 3, 'jump', 'back'), A('ハイセット', 2, 3, 'pierce', 'any')] }] },
     floater: { type: 'mon', r: 2, member: 'm9', title: 'フローター使い', pos: 'SV', lv: [
       { hp: 2, atk: [A('フローター', 1, 1, 'any', 'back')] },
       { hp: 3, atk: [A('フローター', 1, 2, 'any', 'back')] },
@@ -327,21 +329,21 @@ var BCH = (function () {
       { hp: 3, atk: [A('応援', 0, 1, 'ball', 'back'), A('手当て', 1, 1, 'heal', 'back')] },
       { hp: 3, atk: [A('応援', 0, 2, 'ball', 'back'), A('手当て', 1, 2, 'heal', 'back')] }] },
     captain: { type: 'mon', r: 2, member: 'm11', title: '熱血キャプテン', pos: 'OH', lv: [
-      { hp: 3, atk: [A('スパイク', 0, 2, 'straight', 'front')] },
-      { hp: 4, atk: [A('スパイク', 0, 2, 'straight', 'front'), A('鼓舞', 1, 0, 'kiaiAll', 'any')] },
-      { hp: 5, atk: [A('スパイク', 0, 3, 'straight', 'front'), A('鼓舞', 1, 0, 'kiaiAll', 'any')] }] },
+      { hp: 3, atk: [A('スパイク', 0, 2, 'adj', 'front')] },
+      { hp: 4, atk: [A('スパイク', 0, 2, 'adj', 'front'), A('鼓舞', 1, 0, 'kiaiAll', 'any')] },
+      { hp: 5, atk: [A('スパイク', 0, 3, 'adj', 'front'), A('鼓舞', 1, 0, 'kiaiAll', 'any')] }] },
     feint: { type: 'mon', r: 2, member: 'm12', title: 'フェイント職人', pos: 'OH', lv: [
       { hp: 3, atk: [A('フェイント', 0, 1, 'jump', 'front')] },
       { hp: 4, atk: [A('フェイント', 0, 2, 'jump', 'front')] },
       { hp: 4, atk: [A('フェイント', 0, 3, 'jump', 'front')] }] },
     superace: { type: 'mon', r: 3, member: 'm1', title: '覚醒エース', pos: 'OH', lv: [
-      { hp: 3, atk: [A('スパイク', 0, 2, 'straight', 'front')] },
-      { hp: 5, atk: [A('スパイク', 0, 3, 'straight', 'front'), A('強打', 2, 3, 'pierce', 'front')] },
-      { hp: 6, atk: [A('スパイク', 0, 4, 'straight', 'front'), A('豪打', 3, 4, 'pierce', 'front')] }] },
+      { hp: 3, atk: [A('スパイク', 0, 2, 'adj', 'front')] },
+      { hp: 5, atk: [A('スパイク', 0, 3, 'adj', 'front'), A('強打', 2, 3, 'pierce', 'front')] },
+      { hp: 6, atk: [A('スパイク', 0, 4, 'adj', 'front'), A('豪打', 3, 4, 'pierce', 'front')] }] },
     wall: { type: 'mon', r: 3, member: 'm2', title: '鉄壁ミドル', pos: 'MB', lv: [
-      { hp: 5, atk: [A('クイック', 0, 1, 'straight', 'front')], block: 1 },
-      { hp: 6, atk: [A('クイック', 0, 2, 'straight', 'front')], block: 1 },
-      { hp: 7, atk: [A('クイック', 0, 3, 'straight', 'front'), A('ブロード', 3, 2, 'all', 'front')], block: 1 }] },
+      { hp: 5, atk: [A('クイック', 0, 1, 'adj', 'front')], block: 1 },
+      { hp: 6, atk: [A('クイック', 0, 2, 'adj', 'front')], block: 1 },
+      { hp: 7, atk: [A('クイック', 0, 3, 'adj', 'front'), A('ブロード', 3, 2, 'line', 'front')], block: 1 }] },
     genius: { type: 'mon', r: 3, member: 'm3', title: '天才セッター', pos: 'S', lv: [
       { hp: 3, atk: [A('トス', 0, 0, 'kiai', 'any'), A('ツーアタック', 1, 2, 'any', 'any')] },
       { hp: 4, atk: [A('トス', 0, 0, 'kiai', 'any'), A('ツーアタック', 1, 3, 'any', 'any')] },
@@ -578,8 +580,21 @@ var BCH = (function () {
     pl.field[s] = null;
     pl.disc.push(m.uid);
     pl.balls += m.inv;
-    st.players[src].kills++;
     st.ev.push({ k: 'ko', p: tp, s: s });
+    if (src === tp) { // 自分の攻撃で味方がダウン → ペナルティ
+      log(st, '  ✕ ' + cardName(st, tp, m.id) + 'が味方の攻撃でダウン！（ボール' + m.inv + '返却）');
+      if (st.rule.master) {
+        pl.hp -= 1; st.ev.push({ k: 'dmg', p: tp, s: 'M', n: 1 });
+        log(st, '  ⚠ ペナルティ：' + pl.name + 'のキャプテンに1ダメージ（残りHP' + Math.max(0, pl.hp) + '）');
+        if (pl.hp <= 0) { pl.hp = 0; gameOver(st, other(tp), 'キャプテンのHPが0になった（味方ダウンのペナルティ）'); }
+      } else {
+        st.players[other(tp)].kills++;
+        log(st, '  ⚠ ペナルティ：相手の撃破数+1');
+      }
+      if (st.rule.speed) drawMonster(st, pl);
+      return;
+    }
+    st.players[src].kills++;
     // レベルアップ権は「倒した選手」だけがもらえる
     var killer = null;
     if (st._src) st.players[src].field.forEach(function (x) { if (x && x.uid === st._src) killer = x; });
@@ -605,16 +620,70 @@ var BCH = (function () {
     }
     return out;
   }
-  // キャプテンは前衛の真ん中にいて、両側の前衛から隣接している。
-  // 正面・ひとつとびの技は「列の相手」か「相手キャプテン」を選べる（キャプテンありのルールのみ）
+  // ===== 技の届く範囲（カードヒーロー準拠） =====
+  // コートを「つながり」で考える。攻撃する選手から見て
+  //   隣接=距離1 / 1マス遠く=距離2 / 2マス遠く=距離3
+  // 対象コード：数値=相手選手のスロット / 'M'=相手キャプテン / 'f0'〜'f3'=味方選手 / 'fM'=自陣キャプテン
+  // 例）前衛(左)：隣接=相手前衛(左)・相手キャプテン（味方の後衛(左)・自陣キャプテンも隣接）
+  //              1マス遠く=相手前衛(右)・相手後衛(左/右)　2マス遠く=なし
+  //     後衛(左)：隣接=味方前衛(左)・自陣キャプテン　1マス遠く=相手前衛(左/右)・相手キャプテン　2マス遠く=相手後衛(左/右)
+  var LINKS_M = [['f2', 'f0'], ['f2', 'fM'], ['f3', 'f1'], ['f3', 'fM'], ['f0', 'fM'], ['f1', 'fM'],
+    ['f0', 'o0'], ['f0', 'oM'], ['f1', 'o1'], ['f1', 'oM'], ['fM', 'o0'], ['fM', 'o1'], ['fM', 'oM'],
+    ['o2', 'o0'], ['o2', 'oM'], ['o3', 'o1'], ['o3', 'oM'], ['o0', 'oM'], ['o1', 'oM']];
+  var LINKS_S = [['f2', 'f0'], ['f0', 'o0'], ['o0', 'o2']];
+  // かんつう：隣接の相手を狙うと、その「奥」にいる1人も同時に攻撃
+  var BEHIND_M = { f0: { o0: 'o2', oM: 'o3' }, f1: { o1: 'o3', oM: 'o2' }, f2: { f0: 'o0', fM: 'oM' }, f3: { f1: 'o1', fM: 'oM' } };
+  var BEHIND_S = { f0: { o0: 'o2' }, f2: { f0: 'o0' } };
+  function distMap(st, s) {
+    var links = st.rule.speed ? LINKS_S : LINKS_M, adjm = {};
+    links.forEach(function (e) { (adjm[e[0]] = adjm[e[0]] || []).push(e[1]); (adjm[e[1]] = adjm[e[1]] || []).push(e[0]); });
+    var start = 'f' + s, d = {}, q = [start]; d[start] = 0;
+    while (q.length) { var x = q.shift(); (adjm[x] || []).forEach(function (y) { if (d[y] === undefined) { d[y] = d[x] + 1; q.push(y); } }); }
+    return d;
+  }
+  function toCode(k) { return k.charAt(0) === 'o' ? (k === 'oM' ? 'M' : +k.slice(1)) : k; }
+  function toKey(c) { return typeof c === 'number' ? 'o' + c : c === 'M' ? 'oM' : c; }
+  function exists(st, p, key) {
+    if (key === 'oM' || key === 'fM') return !!st.rule.master;
+    var pl = key.charAt(0) === 'o' ? st.players[other(p)] : st.players[p];
+    return !!pl.field[+key.slice(1)];
+  }
+  var RANGE_DIST = { adj: [1], straight: [1, 2], hstraight: [1, 2], pierce: [1, 2, 3], jump: [2], jump2: [3], jump12: [2, 3] };
   function targetOptions(st, p, s, r) {
-    if (!st.rule.master || (r !== 'straight' && r !== 'jump')) return null;
-    var op = st.players[other(p)], c = colOf(s), out = [];
-    var f = op.field[c] ? c : null, b = op.field[c + 2] ? c + 2 : null;
-    var first = r === 'straight' ? (f !== null ? f : b) : b;
-    if (first !== null) out.push(first);
-    out.push('M');
-    return out;
+    if (r === 'line') {
+      var o = [];
+      if (st.players[other(p)].field.some(Boolean) || st.rule.master) o.push('E');
+      o.push('A');
+      return o;
+    }
+    var want = RANGE_DIST[r]; if (!want) return null;
+    var d = distMap(st, s), out = [], self = 'f' + s;
+    Object.keys(d).forEach(function (k) {
+      if (k === self || want.indexOf(d[k]) < 0 || !exists(st, p, k)) return;
+      if (k.charAt(0) === 'f' && d[k] !== 1) return; // 味方を狙えるのは隣接だけ
+      out.push(k);
+    });
+    // 並び順：相手選手→相手キャプテン→味方
+    function rank(k) { return k.charAt(0) === 'o' ? (k === 'oM' ? 1 : 0) : 2; }
+    out.sort(function (x, y) { return rank(x) - rank(y) || (d[x] - d[y]) || (x < y ? -1 : 1); });
+    return out.map(toCode);
+  }
+  // 実際に当たる相手と威力の増減（へるまっすぐ・かんつうは遠くだと-1）
+  function expandTargets(st, p, s, r, tg) {
+    if (r === 'line') {
+      var side = tg === 'A' ? 'f' : 'o', pl = tg === 'A' ? st.players[p] : st.players[other(p)], list = [];
+      slotsFor(st).forEach(function (t) { if (pl.field[t] && !(side === 'f' && t === s)) list.push({ c: side === 'f' ? 'f' + t : t, d: 0 }); });
+      if (st.rule.master) list.push({ c: side === 'f' ? 'fM' : 'M', d: 0 });
+      return list;
+    }
+    var dist = distMap(st, s)[toKey(tg)];
+    if ((r === 'hstraight' || r === 'pierce') && dist >= 2) return [{ c: tg, d: -1 }];
+    if (r === 'pierce' && dist === 1) {
+      var bmap = (st.rule.speed ? BEHIND_S : BEHIND_M)['f' + s] || {}, bk = bmap[toKey(tg)], res = [{ c: tg, d: 0 }];
+      if (bk && exists(st, p, bk)) res.push({ c: toCode(bk), d: 0 });
+      return res;
+    }
+    return [{ c: tg, d: 0 }];
   }
   function needsTarget(r) { return r === 'any' || r === 'heal' || r === 'kiai'; }
 
@@ -761,8 +830,9 @@ var BCH = (function () {
 
   function resolveTargets(st, p, s, r, tg) {
     var pl = st.players[p], op = st.players[other(p)];
-    if (r === 'any') {
-      if (typeof tg !== 'number' || !op.field[tg]) return '相手選手を選んでください';
+    if (r === 'any') { // どこでも：相手選手か相手キャプテン
+      if (tg === 'M' && st.rule.master) return [tg];
+      if (typeof tg !== 'number' || !op.field[tg]) return '相手を選んでください';
       return [tg];
     }
     if (r === 'heal') {
@@ -776,9 +846,10 @@ var BCH = (function () {
     if (r === 'kiaiAll' || r === 'ball') return [];
     var opts = targetOptions(st, p, s, r);
     if (opts) {
-      if (tg === undefined || tg === null) return [opts[0]];
+      if (!opts.length) return '届く相手がいません';
+      if (tg === undefined || tg === null) tg = opts[0];
       if (opts.indexOf(tg) < 0) return 'その相手は狙えません';
-      return [tg];
+      return expandTargets(st, p, s, r, tg);
     }
     var t = autoTargets(st, p, s, r);
     if (!t.length) return '攻撃できる相手がいません';
@@ -792,14 +863,22 @@ var BCH = (function () {
     if (r === 'kiaiAll') { pl.field.forEach(function (m) { if (m) m.kiai = true; }); log(st, '  → 味方全員が集中状態に'); return; }
     if (r === 'ball') { pl.balls += base; log(st, '  → ボール+' + base); return; }
     // 攻撃：先に対象を確定してから順にダメージ
-    var list = tg.map(function (t) { return t === 'M' ? { M: 1 } : { s: t, uid: st.players[op].field[t].uid }; });
+    var list = tg.map(function (t0) {
+      var t = (t0 && typeof t0 === 'object') ? t0.c : t0, dd = (t0 && typeof t0 === 'object') ? t0.d : 0;
+      var side = op, code = t;
+      if (typeof t === 'string' && t.charAt(0) === 'f') { side = p; code = t === 'fM' ? 'M' : +t.slice(1); }
+      if (code === 'M') return { M: 1, side: side, d: dd };
+      return { side: side, uid: st.players[side].field[code].uid, d: dd };
+    });
     list.forEach(function (x) {
       if (st.phase === 'over') return;
-      if (x.M) damageMaster(st, p, op, power);
+      if (x.side === p) log(st, '  ！味方への攻撃');
+      var pw = Math.max(0, power + (x.d || 0));
+      if (x.d) log(st, '  （遠いので威力-1）');
+      if (x.M) damageMaster(st, p, x.side, pw);
       else {
-        // 途中で前に詰めた場合も同じ選手を狙う
-        var idx = st.players[op].field.findIndex(function (m) { return m && m.uid === x.uid; });
-        if (idx >= 0) damageMon(st, p, op, idx, power);
+        var idx = st.players[x.side].field.findIndex(function (m) { return m && m.uid === x.uid; });
+        if (idx >= 0) damageMon(st, p, x.side, idx, pw);
       }
     });
   }
@@ -871,7 +950,7 @@ var BCH = (function () {
       out.push({ t: 'lvup', s: s });
       if (!m.ready || m.acted) return;
       lvData(m).atk.forEach(function (atk, i) {
-        if (atk.r === 'any') opSl.forEach(function (t) { out.push({ t: 'atk', s: s, a: i, tg: t }); });
+        if (atk.r === 'any') { opSl.forEach(function (t) { out.push({ t: 'atk', s: s, a: i, tg: t }); }); if (st.rule.master) out.push({ t: 'atk', s: s, a: i, tg: 'M' }); }
         else if (atk.r === 'heal') mySl.forEach(function (t) { out.push({ t: 'atk', s: s, a: i, tg: t }); });
         else if (atk.r === 'kiai') mySl.forEach(function (t) { if (t !== s) out.push({ t: 'atk', s: s, a: i, tg: t }); });
         else if (targetOptions(st, p, s, atk.r)) targetOptions(st, p, s, atk.r).forEach(function (t) { out.push({ t: 'atk', s: s, a: i, tg: t }); });
@@ -933,6 +1012,7 @@ var BCH = (function () {
     var base = value(st, p), bestA = null, bestV = 0.5;
     acts.forEach(function (a) {
       if (a.t === 'end' || a.t === 'move') return;
+      if (a.t === 'atk' && typeof a.tg === 'string' && (a.tg.charAt(0) === 'f' || a.tg === 'A')) return; // CPUは味方を攻撃しない
       var s2 = clone(st);
       if (applyInner(s2, p, a)) return;
       checkSpeedEnd(s2);
@@ -967,7 +1047,7 @@ var BCH = (function () {
     RULES: RULES, K: K, CARDS: CARDS, SKILLS: SKILLS, STARTER: STARTER, RANGE_LABEL: RANGE_LABEL, FROM_LABEL: FROM_LABEL,
     newGame: newGame, apply: apply, legal: legal, cpuAction: cpuAction, viewFor: viewFor, validateDeck: validateDeck,
     lvData: lvData, isFront: isFront, colOf: colOf, slotsFor: slotsFor, slotName: slotName, cardName: cardName,
-    autoTargets: autoTargets, targetOptions: targetOptions, needsTarget: needsTarget, zoneOf: zoneOf, clone: clone
+    autoTargets: autoTargets, targetOptions: targetOptions, expandTargets: expandTargets, distMap: distMap, needsTarget: needsTarget, zoneOf: zoneOf, clone: clone
   };
 })();
 if (typeof module !== 'undefined') module.exports = BCH;
@@ -1086,7 +1166,7 @@ var ART = (function () {
 })();
 
 // ===== APP：画面・操作・通信 =====
-var APP_VERSION = 'v0.4.0';
+var APP_VERSION = 'v0.7.0';
 var APP_BUILD = '2026-09-24';
 (function () {
   'use strict';
@@ -1402,8 +1482,10 @@ var APP_BUILD = '2026-09-24';
     if (a.t === 'move') return ['me', a.to];
     if (a.tg === undefined) return null;
     if (a.tg === 'M') return ['op', 'M'];
+    if (typeof a.tg === 'string' && a.tg.charAt(0) === 'f') return ['me', a.tg === 'fM' ? 'M' : +a.tg.slice(1)];
     var me = v.players[G.me], enemy = false;
-    if (a.t === 'atk') { var r = BCH.lvData(me.field[a.s]).atk[a.a].r; enemy = r === 'any' || r === 'straight' || r === 'jump'; }
+    if (a.tg === 'E' || a.tg === 'A') return null;
+    if (a.t === 'atk') { var r = BCH.lvData(me.field[a.s]).atk[a.a].r; enemy = r !== 'heal' && r !== 'kiai'; }
     else if (a.t === 'magic') enemy = C[v.cards[a.u].id].eff === 'dmg';
     else if (a.t === 'skill') enemy = BCH.SKILLS[me.skill].eff === 'dmg';
     return [enemy ? 'op' : 'me', a.tg];
@@ -1666,7 +1748,9 @@ var APP_BUILD = '2026-09-24';
     });
     var db = s2.players[G.me].balls - v.players[G.me].balls;
     if (db) sum.push('ボール' + (db > 0 ? '+' : '') + db);
+    if (a.t === 'atk' && typeof a.tg === 'string' && (a.tg.charAt(0) === 'f' || a.tg === 'A')) sum.unshift('⚠味方を攻撃');
     if (s2.phase === 'over' && s2.winner === G.me) sum.push('★これで勝利！');
+    if (s2.phase === 'over' && s2.winner === 1 - G.me) sum.push('⚠これで負け！');
     return { lab: lab, sum: sum };
   }
   // confirm=true：1回タップで結果表示、同じマスをもう1回タップで決定
@@ -1735,7 +1819,7 @@ var APP_BUILD = '2026-09-24';
       if (acts.length && !BCH.needsTarget(atk.r) && atk.r !== 'kiaiAll' && atk.r !== 'ball') {
         var opts = BCH.targetOptions(v, G.me, s, atk.r);
         var ts = opts || BCH.autoTargets(v, G.me, s, atk.r);
-        tgt = ' → ' + ts.map(function (t) { return t === 'M' ? 'キャプテン' : '相手' + BCH.slotName(t); }).join(opts && opts.length > 1 ? ' か ' : '・') + (opts && opts.length > 1 ? '（選ぶ）' : '');
+        tgt = ' → ' + ts.map(function (t) { return t === 'M' ? '相手キャプテン' : t === 'fM' ? '自陣キャプテン' : t === 'E' ? '相手全員' : t === 'A' ? '味方全員' : (typeof t === 'string' ? '味方' + BCH.slotName(+t.slice(1)) : '相手' + BCH.slotName(t)); }).join(opts && opts.length > 1 ? ' か ' : '・') + (opts && opts.length > 1 ? '（選ぶ）' : '');
       }
       h += '<button class="act' + (acts.length ? ' go' : '') + '" data-a="atk" data-v="' + s + ':' + i + '"' + (acts.length ? '' : ' disabled') + '><span class="n">' + atk.n + '<span class="d">' + tgt + '</span></span><span class="d">' + atkLine(atk).replace(/<b>.*?<\/b>/, '') + (why ? '<br>' + why : '') + '</span></button>';
     });
@@ -1927,7 +2011,20 @@ var APP_BUILD = '2026-09-24';
       '・<b>ブロック-1</b>：その選手が受けるダメージがいつも1減る（壁ブロッカーLv2以上など）<br>・<b>集中</b>：次の攻撃+1、受けるダメージ-1<br>・<b>W-UP</b>：出したばかりで、このターンは動けない<br>・<b>ガード-2</b>：キャプテンが受けるダメージは2減る<br>' +
       '・カードの背景色：<span style="color:#ff9a66">オレンジ＝前衛向き</span>／<span style="color:#6fd6e8">水色＝後衛向き</span>／<span style="color:#b9a6f5">紫＝作戦カード</span>' +
       '<h3>技の範囲</h3>' +
-      '・正面：同じ列の相手の一番手前（前衛→後衛）かキャプテン<br>・ひとつとび：同じ列の相手後衛かキャプテン<br>・貫通：同じ列の前衛・後衛・キャプテン全員<br>・ねらい撃ち：好きな相手選手<br>・全体：相手選手全員' +
+      '距離は「隣接」「1マス遠く」「2マス遠く」で数えます。<br>' +
+      '<b>前衛（左）から</b>：隣接＝相手前衛（左）・相手キャプテン（味方の後衛（左）・自陣キャプテンも隣接）／1マス遠く＝相手前衛（右）・相手後衛（左・右）／2マス遠く＝なし<br>' +
+      '<b>後衛（左）から</b>：隣接＝味方前衛（左）・自陣キャプテン／1マス遠く＝相手前衛（左・右）・相手キャプテン／2マス遠く＝相手後衛（左・右）<br>' +
+      '（右側は左右反転。スピードは1列）<br>' +
+      '・<b>隣接</b>（何も書いていない技）：隣接だけ<br>' +
+      '・<b>1つとび</b>：1マス遠くだけ（隣接には届かない）<br>' +
+      '・<b>2つとび</b>：2マス遠くだけ<br>' +
+      '・<b>1つ&amp;2つとび</b>：1マス遠くと2マス遠く<br>' +
+      '・<b>どこでも</b>：相手ならどこでも<br>' +
+      '・<b>まっすぐ</b>：隣接と1マス遠く（威力そのまま）<br>' +
+      '・<b>へるまっすぐ</b>：隣接はそのまま、1マス遠くは威力-1<br>' +
+      '・<b>かんつう</b>：隣接を狙うとその奥の1人も同時に攻撃。遠く（1マス・2マス）は1人だけで威力-1<br>' +
+      '・<b>いっちょくせん</b>：相手全員か味方全員（キャプテン含む）<br>' +
+      '・<b>味方も攻撃対象にできる</b>（隣接の味方のみ）。自分の攻撃で味方選手がダウンすると、1人につきキャプテンに1ダメージのペナルティ（スピードでは相手の撃破数+1）' +
       '</div>';
   }
   function help() { app.innerHTML = '<div class="screen">' + top('遊び方', 'settings') + helpHTML() + verLine() + '</div>'; }
